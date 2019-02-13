@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>Color Namer</title>
+    <title>NameThisColour</title>
     <style>
         body, input {
             text-align: center;
@@ -9,19 +9,16 @@
             font-family: Arial, Helvetica, sans-serif;
             font-size: 12px;
         }
-
         input:focus, button:focus {
             border-color: gray;
             outline: none;
         }
-
         .input-type {
             position: relative;
             z-index: 5;
             margin: 20px 0;
             text-align: center;
         }
-
         .inp-btn {
             width: 100px;
             padding: 8px;
@@ -103,7 +100,6 @@
                 border-right-color: black;
             }
 
-
         .field-container {
             display: none;
             position: relative;
@@ -121,11 +117,9 @@
             margin-top: 10px;
             padding: 8px;
         }
-
         .inp-fld.hex {
             padding-left: 18px;
         }
-
         .inp-fld.hex + span {
             position: absolute;
             left: 10px;
@@ -133,7 +127,6 @@
             color: gray;
             user-select: none;
         }
-
         .inp-fld.name {
             position: relative;
             z-index: 20;
@@ -153,7 +146,6 @@
             input:focus + #autoComplete {
                 display: block;
             }
-
         #autoComplete div {
             width: calc(100% - 10px);
             padding-left: 10px;
@@ -274,11 +266,29 @@
     <canvas id="can"></canvas>
 
     <script>
+        // Get Elements
         let inp_btns = Array.from(document.getElementsByClassName('inp-btn')),
             inp_ctrs = Array.from(document.getElementsByClassName('field-container')),
             inp_flds = Array.from(document.getElementsByClassName('inp-fld')),
-            cur_inp = 0,
+            autoComplete = document.getElementById('autoComplete'),
+            resultsContainer = document.getElementById('resultsContainer'),
+            resultsEls = [];
+        
+        // Set global variables
+        let cur_inp = 0,
             cur_col = [];
+            points = [],
+			fLen = 0.001,
+			cam_ang_h = 0,
+			cam_ang_v = 0,
+			cam_z = 1000,
+            cur_origin = [127, 127, 127],
+            mx = my = -1,
+			cur_ang_h = cur_ang_v = 0,
+            zoomTo = -cam_z,
+            currentNear = -2,
+            lockNear = false,
+            lineOpac = 0;
 
         // Toggle input type
         inp_btns.forEach((b, i) => b.onclick = changeInput.bind(null, i));
@@ -290,10 +300,9 @@
             cur_inp = i;
         }
         
-        // Color name autocomplete and selection
-        let autoComplete = document.getElementById('autoComplete');
-        inp_flds[4].onkeyup = sortNames;
-        function sortNames() {
+        // Color name autocomplete
+        inp_flds[4].onkeyup = setAutocompleteList;
+        function setAutocompleteList() {
             let val = inp_flds[4].value;
             autoComplete.innerHTML = '';
             if (val.length === 0) {
@@ -311,25 +320,11 @@
                 }
             }
             fills.forEach(f => {
-                autoComplete.innerHTML += `<div onmousedown="inp_flds[4].value = '${f}'; sortNames();">${f}</div>`;
+                autoComplete.innerHTML += `<div onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList();">${f}</div>`;
             });
         }
 
-        // Canvas
-        let can = document.getElementById('can'),
-			canRad = Math.min(window.innerWidth, window.innerHeight) * 0.4;
-		can.width  = window.innerWidth;
-		can.height = window.innerHeight;
-		let ctx = can.getContext('2d');
-		ctx.translate(window.innerWidth / 2, (window.innerHeight / 2) + 50);
-
         // Color Points
-		let points = [],
-			fLen = 0.001,
-			cam_ang_h = 0,
-			cam_ang_v = 0,
-			cam_z = 1000;
-
 		function Point(x, y, z, label, hex = '000000') {
 			this.x = x;
 			this.y = y;
@@ -339,7 +334,7 @@
 			this.draw_x = x;
 			this.draw_y = y;
             let rgb = rgbHex(hex, true);
-            this.outline = rgb[0] + rgb[1] + rgb[2] > 740;
+            this.hasOutline = rgb[0] + rgb[1] + rgb[2] > 740;
 			this.hex = hex;
             this.fade = -1;
             this.goTo = [];
@@ -380,40 +375,44 @@
                 let factor = Math.max(0, (1 + (this.depth / canRad)) / 2);
                 if (this.depth < (cam_z / 1.2)) {
                     let opac = this.fade === -1 ? 'ff' : Math.floor(this.fade).toString(16).padStart(2, '0');
-                    ctx.fillStyle = '#' + this.hex + opac;
-                    ctx.beginPath();
-                        ctx.arc(
-                            this.draw_x,
-                            this.draw_y,
-                            (1000 / cam_z) * (1 + (4 * factor)),
-                            0,
-                            Math.PI * 2
-                        );
-                    ctx.fill();
-                    if (this.outline) {
-                        ctx.strokeStyle = '#e5e5e5' + opac;
-                        ctx.stroke();
-                    }
-                    if (this.nearsIndex === currentNear) {
-                        ctx.strokeStyle = (this.outline ? '#eeeeee' : '#' + this.hex) + lineOpac.toString(16).padStart(2, '0');
-                        ctx.lineWidth = Math.max(1, 2 * (1000 / cam_z));
+                    ctx.save();
+                        ctx.fillStyle = '#' + this.hex + opac;
                         ctx.beginPath();
                             ctx.arc(
                                 this.draw_x,
                                 this.draw_y,
-                                (1000 / cam_z) * (3 + (4 * factor)),
-                                Math.PI,
-                                Math.PI * 3
+                                (1000 / cam_z) * (1 + (4 * factor)),
+                                0,
+                                Math.PI * 2
                             );
-                            let endX = (window.innerWidth / -2) + 400,
-                                endY = (this.nearsIndex * 40) - (currentNear === 0 ? 230 : 190);
-                            if (this.draw_x > endX + 150) {
-                                ctx.lineTo(this.draw_x - 70, this.draw_y);
-                                ctx.lineTo(endX + 50, endY);
-                            }
-                            ctx.lineTo(endX, endY);
-                        ctx.stroke();
-                    }
+                        ctx.fill();
+                        if (this.hasOutline) {
+                            ctx.strokeStyle = '#e5e5e5' + opac;
+                            ctx.stroke();
+                        }
+                        if (this.nearsIndex === currentNear) {
+                            ctx.strokeStyle =
+                                (this.hasOutline ? '#eeeeee' : '#' + this.hex) +
+                                lineOpac.toString(16).padStart(2, '0');
+                            ctx.lineWidth = Math.max(1, 2 * (1000 / cam_z));
+                            ctx.beginPath();
+                                ctx.arc(
+                                    this.draw_x,
+                                    this.draw_y,
+                                    (1000 / cam_z) * (3 + (4 * factor)),
+                                    Math.PI,
+                                    Math.PI * 3
+                                );
+                                let endX = (window.innerWidth / -2) + 400,
+                                    endY = (this.nearsIndex * 40) - (currentNear === 0 ? 230 : 190);
+                                if (this.draw_x > endX + 150) {
+                                    ctx.lineTo(this.draw_x - 70, this.draw_y);
+                                    ctx.lineTo(endX + 50, endY);
+                                }
+                                ctx.lineTo(endX, endY);
+                            ctx.stroke();
+                        }
+                    ctx.restore();
                 }
 			}
             Point.prototype.fadeOut = function() {
@@ -427,7 +426,6 @@
                 ];
             }
 
-        let cur_origin = [127, 127, 127];
         function addColorPoints(colArr) {
 			let scale = canRad / 255;
             colArr.forEach(c => {
@@ -441,17 +439,17 @@
             });
         }
 
-        function focusPoints(new_origin, range) {
+        function focusPoints(newOrigin, targetPoints) {
             let scale = canRad / 255;
-            let scaledOrigin = new_origin.map((o, i) => (o - cur_origin[i]) * scale);
-            cur_origin = new_origin;
+            let scaledOrigin = newOrigin.map((o, i) => (o - cur_origin[i]) * scale);
+            cur_origin = newOrigin;
             zoomTo = 400;
             resultsContainer.innerHTML = '';
             currentNear = -2;
             lockNear = false;
             points.forEach(p => {
                 p.translate(scaledOrigin);
-                let i  = range.findIndex(r => r.name === p.label);
+                let i  = targetPoints.findIndex(t => t.name === p.label);
                 if (i > -1) {
                     p.fade = -1;
                     p.nearsIndex = i;
@@ -580,10 +578,6 @@
         }
 
         // Results
-        let resultsContainer = document.getElementById('resultsContainer'),
-            currentNear = -2,
-            lineOpac = 0,
-            lockNear = false;
         function renderResults(cols) {
             let cur = cols.shift();
             resultsContainer.innerHTML = `
@@ -624,6 +618,8 @@
                     </div>
                 `;
             });
+            resultsEls = Array.from(document.getElementsByClassName('result'));
+            resultsEls.splice(1, 1);
         }
 
         function focusNear(i, lock = false) {
@@ -648,20 +644,21 @@
                     lineOpac = 5;
                 }
             }
-            Array.from(document.getElementsByClassName('result locked')).forEach(r => r.classList.remove('locked'));
+            resultsEls.forEach(r => r.classList.remove('locked'));
             if (lockNear) {
-                let c = currentNear;
-                if (c !== 0) {
-                    c++;
-                }
-                Array.from(document.getElementsByClassName('result'))[c].classList.add('locked');
+                resultsEls[currentNear].classList.add('locked');
             }
         }
 
+        // Canvas init
+        let can = document.getElementById('can'),
+			canRad = Math.min(window.innerWidth, window.innerHeight) * 0.4;
+		can.width  = window.innerWidth;
+		can.height = window.innerHeight;
+		let ctx = can.getContext('2d');
+		ctx.translate(window.innerWidth / 2, (window.innerHeight / 2) + 50);
+
         // Cube movement
-        let mx = my = -1,
-			cur_ang_h = cur_ang_v = 0,
-            zoomTo = -cam_z;
 		document.onmousemove = function(e) {
 			if (mx !== -1) {
 				cam_ang_h = cur_ang_h + (mx - e.clientX) / canRad * 3.2;
@@ -690,6 +687,7 @@
 			cur_ang_v = cam_ang_v;
 		}
 
+        // Animation
         function aniLoop() {
             if (mx === -1) {
                 cam_ang_h -= 0.002;
@@ -720,12 +718,12 @@
 			window.requestAnimationFrame(aniLoop);
 		}
 
-        // Init animation
         window.onload = () => {
             addColorPoints(names);
 		    aniLoop();
         };
 
+        // Color names
         const names = [
             {
                 "name": "absolute zero",
