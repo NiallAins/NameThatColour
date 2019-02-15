@@ -516,7 +516,7 @@
         }
         function updateColor() {
             if (cur_inp === 0) {
-                let val = inp_flds[0].value;
+                let val = inp_flds[0].value.toLowerCase();
                 if (val.length === 3) {
                     val =
                         val.substr(0, 1) + 
