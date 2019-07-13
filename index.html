@@ -45,7 +45,7 @@
                 border: 1px solid lightgray;
                 margin-right: 6px;
                 cursor: pointer;
-		background-color: white;
+				background-color: white;
             }
             #actionBtns button:hover {
                 background-color: lightgray;
@@ -150,7 +150,8 @@
             line-height: 34px;
             cursor: pointer;
         }
-            #autoComplete div:hover {
+            #autoComplete div:hover,
+			#autoComplete div:focus {
                 background-color: lightgray;
             }
 
@@ -323,7 +324,7 @@
 					<div
 						tabindex="0"
 						onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList();"
-						onkeyup="($event.keyCode === 13 || $event.keyCode === 11) ? this.onmousedown() : '';"
+						onkeyup="(event.keyCode === 13 || event.keyCode === 11) ? this.onmousedown() : '';"
 					>
 						${f}
 					</div>
