@@ -134,7 +134,6 @@
         }
 
         #autoComplete {
-            display: none;
             position: absolute;
             z-index: 10;
             left: 0;
@@ -144,9 +143,6 @@
             border-top: none;
             background-color: white;
         }
-            input:focus + #autoComplete {
-                display: block;
-            }
         #autoComplete div {
             width: calc(100% - 10px);
             padding-left: 10px;
@@ -277,15 +273,17 @@
         
         // Set global variables
         let cur_inp = 0,
-            cur_col = [];
+            cur_col = [],
             points = [],
 			fLen = 0.001,
 			cam_ang_h = 0,
 			cam_ang_v = 0,
 			cam_z = 1000,
             cur_origin = [127, 127, 127],
-            mx = my = -1,
-			cur_ang_h = cur_ang_v = 0,
+            mx = -1,
+			my = -1,
+			cur_ang_h = 0,
+			cur_ang_v = 0,
             zoomTo = -cam_z,
             currentNear = -2,
             lockNear = false,
@@ -311,7 +309,7 @@
             }
             let fills = [];
             for (let i = 0; i < names.length; i++) {
-                if (names[i].name.substr(0, val.length) === val) {
+                if (names[i].name !== val && names[i].name.substr(0, val.length) === val) {
                     fills.push(names[i].name);
                     if (fills.length > 4) {
                         break;
@@ -322,14 +320,14 @@
             }
             fills.forEach(f => {
                 autoComplete.innerHTML += `
-		    <div
-			tabindex="0"
-			onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList();"
-			onkeyup="($event.keyCode === 13 || $event.keyCode === 11) ? this.onmousedown() : '';"
-		    >
-			${f}
-	    	    </div>
-		`;
+					<div
+						tabindex="0"
+						onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList();"
+						onkeyup="($event.keyCode === 13 || $event.keyCode === 11) ? this.onmousedown() : '';"
+					>
+						${f}
+					</div>
+				`;
             });
         }
 
