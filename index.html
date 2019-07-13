@@ -45,6 +45,7 @@
                 border: 1px solid lightgray;
                 margin-right: 6px;
                 cursor: pointer;
+		background-color: white;
             }
             #actionBtns button:hover {
                 background-color: lightgray;
@@ -114,7 +115,7 @@
             width: 100%;
             text-align: left;
             border: 1px solid lightgray;
-            margin-top: 10px;
+            margin-top: 12px;
             padding: 8px;
         }
         .inp-fld.hex {
@@ -320,7 +321,15 @@
                 }
             }
             fills.forEach(f => {
-                autoComplete.innerHTML += `<div onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList();">${f}</div>`;
+                autoComplete.innerHTML += `
+		    <div
+			tabindex="0"
+			onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList();"
+			onkeyup="($event.keyCode === 13 || $event.keyCode === 11) ? this.onmousedown() : '';"
+		    >
+			${f}
+	    	    </div>
+		`;
             });
         }
 
