@@ -777,12 +777,12 @@
 
     // Cube movement
     function getTouchDist(e) {
-      if (e.touches && e.touches > 1) {
+      if (e.touches && e.touches.length > 1) {
         let t1x = e.touches[0].clientX,
             t1y = e.touches[0].clientY,
             t2x = e.touches[1].clientX,
             t2y = e.touches[1].clientY;
-        return Math.sqrt((t2y - t1y) * (t2y - t1y) + ((t2x - t1x) * (t2x - t1x)));
+        return Math.sqrt(((t2y - t1y) * (t2y - t1y)) + ((t2x - t1x) * (t2x - t1x)));
       } else {
         return -1;
       }
