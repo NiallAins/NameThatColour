@@ -45,7 +45,7 @@
                 border: 1px solid lightgray;
                 margin-right: 6px;
                 cursor: pointer;
-				background-color: white;
+				        background-color: white;
             }
             #actionBtns button:hover {
                 background-color: lightgray;
@@ -124,7 +124,7 @@
         .inp-fld.hex + span {
             position: absolute;
             left: 10px;
-            top: 19px;
+            top: 21px;
             color: gray;
             user-select: none;
         }
@@ -151,7 +151,7 @@
             cursor: pointer;
         }
             #autoComplete div:hover,
-			#autoComplete div:focus {
+			      #autoComplete div:focus {
                 background-color: lightgray;
             }
 
@@ -223,11 +223,11 @@
                 }
 
         #can {
-            position: fixed;
-            z-index: 0;
-            top: 0;
-            left: 0;
-            cursor: grab;
+          position: fixed;
+          z-index: 0;
+          top: 0;
+          left: 0;
+          cursor: grab;
         }
             #can:active {
                 cursor: grabbing;
@@ -236,9 +236,7 @@
 </head>
 <body>
     <div class="input-type">
-        <p>
-            Select a colour:
-        </p>
+        <p> Select a colour: </p>
         <button class="inp-btn selected">Hex Value</button>
         <button class="inp-btn">RGB</button>
         <button class="inp-btn">Name</button>
@@ -276,15 +274,15 @@
         let cur_inp = 0,
             cur_col = [],
             points = [],
-			fLen = 0.001,
-			cam_ang_h = 0,
-			cam_ang_v = 0,
-			cam_z = 1000,
+			      fLen = 0.001,
+			      cam_ang_h = 0,
+			      cam_ang_v = 0,
+			      cam_z = 1000,
             cur_origin = [127, 127, 127],
             mx = -1,
-			my = -1,
-			cur_ang_h = 0,
-			cur_ang_v = 0,
+			      my = -1,
+			      cur_ang_h = 0,
+			      cur_ang_v = 0,
             zoomTo = -cam_z,
             currentNear = -2,
             lockNear = false,
@@ -302,7 +300,11 @@
         
         // Color name autocomplete
         inp_flds[4].onkeyup = setAutocompleteList;
-        function setAutocompleteList() {
+        function setAutocompleteList(e) {
+            if (e.keyCode === 13) {
+              updateColor();
+              return;
+            }
             let val = inp_flds[4].value;
             autoComplete.innerHTML = '';
             if (val.length === 0) {
@@ -321,18 +323,18 @@
             }
             fills.forEach(f => {
                 autoComplete.innerHTML += `
-					<div
-						tabindex="0"
-						onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList();"
-						onkeyup="(event.keyCode === 13 || event.keyCode === 11) ? this.onmousedown() : '';"
-					>
-						${f}
-					</div>
-				`;
+                  <div
+                    tabindex="0"
+                    onmousedown="inp_flds[4].value = '${f}'; setAutocompleteList({ keyCode: 13 });"
+                    onkeyup="(event.keyCode === 13 || event.keyCode === 11) ? this.onmousedown() : '';"
+                  >
+                    ${f}
+                  </div>
+                `;
             });
         }
 
-        // Color Points
+    // Color Points
 		function Point(x, y, z, label, hex = '000000') {
 			this.x = x;
 			this.y = y;
@@ -341,43 +343,43 @@
 			this.depth;
 			this.draw_x = x;
 			this.draw_y = y;
-            let rgb = rgbHex(hex, true);
-            this.hasOutline = rgb[0] + rgb[1] + rgb[2] > 740;
+      let rgb = rgbHex(hex, true);
+      this.hasOutline = rgb[0] + rgb[1] + rgb[2] > 740;
 			this.hex = hex;
-            this.fade = -1;
-            this.goTo = [];
-            this.nearsIndex = -1;
+      this.fade = -1;
+      this.goTo = [];
+      this.nearsIndex = -1;
 		}
 			Point.prototype.step = function() {
-                if (this.goTo.length) {
-                    this.x += (this.goTo[0] - this.x) / 50;
-                    this.y += (this.goTo[1] - this.y) / 50;
-                    this.z += (this.goTo[2] - this.z) / 50;
-                    if (Math.abs(this.goTo[0] - this.x) < 1) {
-                        this.x = this.goTo[0];
-                        this.y = this.goTo[1];
-                        this.z = this.goTo[2];
-                        this.goTo = [];
-                    }
-                }
+        if (this.goTo.length) {
+            this.x += (this.goTo[0] - this.x) / 50;
+            this.y += (this.goTo[1] - this.y) / 50;
+            this.z += (this.goTo[2] - this.z) / 50;
+            if (Math.abs(this.goTo[0] - this.x) < 1) {
+                this.x = this.goTo[0];
+                this.y = this.goTo[1];
+                this.z = this.goTo[2];
+                this.goTo = [];
+            }
+        }
 
-                let c = Math.cos(cam_ang_h),
-					s = Math.sin(cam_ang_h);
+        let c = Math.cos(cam_ang_h),
+					  s = Math.sin(cam_ang_h);
 				let x_rot_full = (this.x * c) - (this.z * s),
-					z_rot_half = (this.x * s) + (this.z * c);
+				  	z_rot_half = (this.x * s) + (this.z * c);
 
 				c = Math.cos(cam_ang_v);
 				s = Math.sin(cam_ang_v);
 				let y_rot_full = (this.y * s) + (z_rot_half * c),
-					z_rot_full = (this.y * c) - (z_rot_half * s);
+				    z_rot_full = (this.y * c) - (z_rot_half * s);
 
 				this.draw_x = x_rot_full / ((z_rot_full - cam_z) * fLen);
 				this.draw_y = y_rot_full / ((z_rot_full - cam_z) * fLen);
 				this.depth = z_rot_full;
 
-                if (this.fade > 20) {
-                    this.fade -= 4;
-                }
+        if (this.fade > 20) {
+            this.fade -= 4;
+        }
 			}
 			Point.prototype.draw = function(rad) {
                 let factor = Math.max(0, (1 + (this.depth / canRad)) / 2);
@@ -435,16 +437,16 @@
             }
 
         function addColorPoints(colArr) {
-			let scale = canRad / 255;
-            colArr.forEach(c => {
-                points.push(new Point(
-					(c.rgb[0] - cur_origin[0]) * scale,
-					(c.rgb[1] - cur_origin[1]) * scale,
-					(c.rgb[2] - cur_origin[2]) * scale,
-					c.name,
-					c.hex
-				));
-            });
+			    let scale = canRad / 255;
+          colArr.forEach(c => {
+              points.push(new Point(
+                  (c.rgb[0] - cur_origin[0]) * scale,
+                  (c.rgb[1] - cur_origin[1]) * scale,
+                  (c.rgb[2] - cur_origin[2]) * scale,
+                  c.name,
+                  c.hex
+              ));
+          });
         }
 
         function focusPoints(newOrigin, targetPoints) {
@@ -523,6 +525,8 @@
             }
         }
         function updateColor() {
+            autoComplete.innerHTML = '';
+            
             if (cur_inp === 0) {
                 let val = inp_flds[0].value.toLowerCase();
                 if (val.length === 3) {
@@ -633,7 +637,7 @@
         function focusNear(i, lock = false) {
             if (lock) {
                 if (lockNear && currentNear === i) {
-                    currentNear = -1;
+                    currentNear = -2;
                     lineOpac = 0;
                     lockNear = false;
                 } else {
@@ -645,7 +649,7 @@
                 }
             } else if(!lockNear) {
                 if (i === -1) {
-                    currentNear = -1;
+                    currentNear = -2;
                     lineOpac = 0;
                 } else {
                     currentNear = i;
@@ -696,7 +700,7 @@
 		}
 
         // Animation
-        function aniLoop() {
+        function aniLoop() { 
             if (mx === -1) {
                 cam_ang_h -= 0.002;
                 cur_ang_h -= 0.002;
