@@ -781,13 +781,15 @@
         if (zoomTo < 0) {
           zoomTo *= -1;
         }
-        zoomTo = currentZoom + ((my - e.touches[0].clientY) / 100);
+        zoomTo = -currentZoom - (Math.min(Math.max((my - e.touches[0].clientY), -200), 200) * 2);
         if (zoomTo < 200) {
           zoomTo = 200;
         }
         if (zoomTo > 2000) {
           zoomTo = 2000;
         }
+        console.log(currentZoom);
+
       } else if (mx !== -1) {
 				cam_ang_h = cur_ang_h + (mx - (e.clientX || e.touches[0].clientX)) / canRad * 3.2;
 				cam_ang_v = cur_ang_v + (my - (e.clientY || e.touches[0].clientY)) / canRad * 3.2;
