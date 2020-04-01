@@ -770,8 +770,20 @@
             ctx.translate(window.innerWidth / 2, (window.innerHeight / 2) + 50);
 
         // Cube movement
+        
 		document.onmousemove = document.ontouchmove = function(e) {
-			if (mx !== -1) {
+      if (e.touches && e.touches.length > 1) {
+        if (zoomTo < 0) {
+          zoomTo *= -1;
+        }
+        zoomTo = (my - e.touches[0].clientY) / 100;
+        if (zoomTo < 200) {
+          zoomTo = 200;
+        }
+        if (zoomTo > 2000) {
+          zoomTo = 2000;
+        }
+      } else if (mx !== -1) {
 				cam_ang_h = cur_ang_h + (mx - (e.clientX || e.touches[0].clientX)) / canRad * 3.2;
 				cam_ang_v = cur_ang_v + (my - (e.clientY || e.touches[0].clientY)) / canRad * 3.2;
 			}
