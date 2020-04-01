@@ -562,8 +562,8 @@
         }
 
         function resetColor() {
-            if (isMobile) {
-              resultsMobile.classList.remove('acitve');
+            if (isMobile && resultsEls.length > 0) {
+              resultsMobile.classList.remove('active');
               ctx.translate(0, 100);
             }
             let scale = canRad / 255;
@@ -577,6 +577,7 @@
                 p.nearsIndex = -1;
             });
             resultsContainer.innerHTML = '';
+            resultsEls = [];
             currentNear = -2;
             lockNear = false;
         }
