@@ -2,6 +2,7 @@
 
 <head>
     <title>NameThisColour</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,minimum-scale=1">
     <style>
         body, input {
             text-align: center;
@@ -37,6 +38,7 @@
             position: absolute;
             top: 70px;
             left: calc(50% + 84px);
+            white-space: nowrap;
         }
             #actionBtns button {
                 position: relative;
@@ -232,6 +234,80 @@
             #can:active {
                 cursor: grabbing;
             }
+
+      @media (max-width: 500px) {
+        .inp-btn {
+          width: 82px;
+        }
+        .field-container {
+          margin: 0 0 0 calc(50% - 131px);
+        }
+        #actionBtns {
+          left: calc(50% + 57px);
+        }
+        #resultsMobile {
+          position: fixed;
+          bottom: -200px;
+          left: -1px;
+          z-index: 50;
+          width: calc(100vw - 20px);
+          height: 120px;
+          padding: 10px;
+          border: 1px solid #bbb;
+          border-radius: 20px 20px 0 0;
+          background: #fff8;
+          transition: height 0.3s;
+        }
+            #resultsMobile.active {
+              bottom: -1px;
+            }
+            #resultsMobile.active.open {
+              height: 260px;
+            }
+            #resultsMobile button:after {
+              transform: rotate(225deg);
+            }
+            #resultsMobile button {
+              position: relative;
+              padding: 9px 28px;
+              border: none;
+              background: none;
+              cursor: pointer;
+            }
+            #resultsMobile button:after {
+              content: '';
+              position: absolute;
+              top: 6px;
+              left: calc(50% - 4px);
+              width: 8px;
+              height: 8px;
+              border: solid gray;
+              border-width: 2px 0 0 2px;
+              transform: rotate(45deg); 
+            }
+        #resultsContainer {
+          position: absolute;
+          top: 40px;
+          left: 16px;
+          right: 16px;
+          height: 100%;
+          white-space: nowrap;
+          overflow: auto;
+        }
+          .result:nth-child(2) {
+            height: 20px;
+            line-height: 10px;
+          }
+          .result>div:nth-child(1) {
+            width: 60px;
+          }
+          .result>div:nth-child(2) {
+            width: calc(100% - 104px);
+          }
+          .result .diff {
+            margin-top: 9px;
+          }
+      }
     </style>
 </head>
 <body>
@@ -258,7 +334,13 @@
             <button id="reset" onclick="resetColor()"></button>
         </div>
     </div>
-    <div id="resultsContainer"></div>
+    <div id="resultsMobile">
+      <button
+        class="btn-open"
+        onclick="event.target.parentElement.classList.toggle('open')"
+      ></button>
+      <div id="resultsContainer"></div>
+    </div>
     <canvas id="can"></canvas>
 
     <script>
@@ -267,6 +349,7 @@
             inp_ctrs = Array.from(document.getElementsByClassName('field-container')),
             inp_flds = Array.from(document.getElementsByClassName('inp-fld')),
             autoComplete = document.getElementById('autoComplete'),
+            resultsMobile = document.getElementById('resultsMobile'),
             resultsContainer = document.getElementById('resultsContainer'),
             resultsEls = [];
         
@@ -286,7 +369,8 @@
             zoomTo = -cam_z,
             currentNear = -2,
             lockNear = false,
-            lineOpac = 0;
+            lineOpac = 0,
+            isMobile = window.innerWidth < 500;
 
         // Toggle input type
         inp_btns.forEach((b, i) => b.onclick = changeInput.bind(null, i));
@@ -382,7 +466,7 @@
         }
 			}
 			Point.prototype.draw = function(rad) {
-                let factor = Math.max(0, (1 + (this.depth / canRad)) / 2);
+                let factor = Math.max(0, ((isMobile ? 0 : 1) + (this.depth / canRad)) / 2);
                 if (this.depth < (cam_z / 1.2)) {
                     let opac = this.fade === -1 ? 'ff' : Math.floor(this.fade).toString(16).padStart(2, '0');
                     ctx.save();
@@ -404,7 +488,7 @@
                             ctx.strokeStyle =
                                 (this.hasOutline ? '#eeeeee' : '#' + this.hex) +
                                 lineOpac.toString(16).padStart(2, '0');
-                            ctx.lineWidth = Math.max(1, 2 * (1000 / cam_z));
+                            ctx.lineWidth = Math.max(1, (isMobile ? 1 : 2) * (1000 / cam_z));
                             ctx.beginPath();
                                 ctx.arc(
                                     this.draw_x,
@@ -413,13 +497,15 @@
                                     Math.PI,
                                     Math.PI * 3
                                 );
-                                let endX = (window.innerWidth / -2) + 400,
-                                    endY = (this.nearsIndex * 40) - (currentNear === 0 ? 230 : 190);
-                                if (this.draw_x > endX + 150) {
-                                    ctx.lineTo(this.draw_x - 70, this.draw_y);
-                                    ctx.lineTo(endX + 50, endY);
+                                if (!isMobile) {
+                                  let endX = (window.innerWidth / -2) + 400,
+                                      endY = (this.nearsIndex * 40) - (currentNear === 0 ? 230 : 190);
+                                  if (this.draw_x > endX + 150) {
+                                      ctx.lineTo(this.draw_x - 70, this.draw_y);
+                                      ctx.lineTo(endX + 50, endY);
+                                  }
+                                  ctx.lineTo(endX, endY);
                                 }
-                                ctx.lineTo(endX, endY);
                             ctx.stroke();
                         }
                     ctx.restore();
@@ -453,7 +539,7 @@
             let scale = canRad / 255;
             let scaledOrigin = newOrigin.map((o, i) => (o - cur_origin[i]) * scale);
             cur_origin = newOrigin;
-            zoomTo = 400;
+            zoomTo = isMobile ? 200 : 400;
             resultsContainer.innerHTML = '';
             currentNear = -2;
             lockNear = false;
@@ -471,6 +557,8 @@
         }
 
         function resetColor() {
+            mobileResults.classList.remove('acitve');
+            can.transfrom(0, 100);
             let scale = canRad / 255;
             let scaledOrigin = cur_origin.map((o, i) => (127 - o) * scale);
             cur_origin = [127, 127, 127];
@@ -526,7 +614,7 @@
         }
         function updateColor() {
             autoComplete.innerHTML = '';
-            
+
             if (cur_inp === 0) {
                 let val = inp_flds[0].value.toLowerCase();
                 if (val.length === 3) {
@@ -591,6 +679,10 @@
 
         // Results
         function renderResults(cols) {
+            if (isMobile && resultsEls.length === 0) {
+              resultsMobile.classList.add('active');
+              ctx.translate(0, -100);
+            }
             let cur = cols.shift();
             resultsContainer.innerHTML = `
                 <div
@@ -664,36 +756,36 @@
 
         // Canvas init
         let can = document.getElementById('can'),
-			canRad = Math.min(window.innerWidth, window.innerHeight) * 0.4;
-		can.width  = window.innerWidth;
-		can.height = window.innerHeight;
-		let ctx = can.getContext('2d');
-		ctx.translate(window.innerWidth / 2, (window.innerHeight / 2) + 50);
+			      canRad = Math.min(window.innerWidth, window.innerHeight) * 0.4;
+		    can.width  = window.innerWidth;
+		    can.height = window.innerHeight;
+		    let ctx = can.getContext('2d');
+            ctx.translate(window.innerWidth / 2, (window.innerHeight / 2) + 50);
 
         // Cube movement
-		document.onmousemove = function(e) {
+		document.onmousemove = document.ontouchmove = function(e) {
 			if (mx !== -1) {
-				cam_ang_h = cur_ang_h + (mx - e.clientX) / canRad * 3.2;
-				cam_ang_v = cur_ang_v + (my - e.clientY) / canRad * 3.2;
+				cam_ang_h = cur_ang_h + (mx - (e.clientX || e.touches[0].clientX)) / canRad * 3.2;
+				cam_ang_v = cur_ang_v + (my - (e.clientY || e.touches[0].clientY)) / canRad * 3.2;
 			}
 		}
-		can.onmousedown = function(e) {
-			mx = e.clientX;
-			my = e.clientY;
-		}
-        can.onwheel = function(e) {
-            if (zoomTo < 0) {
-                zoomTo *= -1;
-            }
-            zoomTo += e.deltaY > 0 ? 100 : -100;
-            if (zoomTo < 200) {
-                zoomTo = 200;
-            }
-            if (zoomTo > 2000) {
-                zoomTo = 2000;
-            }
+		can.onmousedown = can.ontouchstart = function(e) {
+			mx = e.clientX || e.touches[0].clientX;
+			my = e.clientY || e.touches[0].clientY;
+    }
+    can.onwheel = function(e) {
+        if (zoomTo < 0) {
+            zoomTo *= -1;
         }
-		document.onmouseup = function() {
+        zoomTo += e.deltaY > 0 ? 100 : -100;
+        if (zoomTo < 200) {
+            zoomTo = 200;
+        }
+        if (zoomTo > 2000) {
+            zoomTo = 2000;
+        }
+    }
+		document.onmouseup = document.ontouchend = function() {
 			mx = -1;
 			cur_ang_h = cam_ang_h;
 			cur_ang_v = cam_ang_v;
@@ -719,20 +811,20 @@
             }
 			points.sort((a, b) => a.depth - b.depth).forEach(p => p.step());
 
-			ctx.clearRect(
-                -window.innerWidth / 2,
-                (-window.innerHeight / 2) - 50,
-                window.innerWidth,
-                window.innerHeight
-            );
-			points.forEach(o => o.draw());
+      ctx.clearRect(
+          -window.innerWidth / 2,
+          (-window.innerHeight / 2) - 150,
+          window.innerWidth,
+          window.innerHeight + 200
+      );
+      points.forEach(o => o.draw());
 
 			window.requestAnimationFrame(aniLoop);
 		}
 
         window.onload = () => {
             addColorPoints(names);
-		    aniLoop();
+		        aniLoop();
         };
 
         // Color names
