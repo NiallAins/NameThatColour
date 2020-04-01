@@ -272,6 +272,7 @@
               transform: rotate(225deg);
             }
             #resultsMobile button {
+              display: inline;
               position: relative;
               padding: 9px 28px;
               border: none;
@@ -393,7 +394,7 @@
               updateColor();
               return;
             }
-            let val = inp_flds[4].value;
+            let val = inp_flds[4].value.toLowerCase();
             autoComplete.innerHTML = '';
             if (val.length === 0) {
                 return;
