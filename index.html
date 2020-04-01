@@ -3,7 +3,11 @@
 <head>
     <title>NameThisColour</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,minimum-scale=1">
+    <link rel="icon" type="image/ico" href="/NameThisColour/favicon.ico">
     <style>
+        body {
+          overscroll-behavior: none }
+        }
         body, input {
             text-align: center;
             color: #333;
@@ -359,23 +363,24 @@
             resultsEls = [];
         
         // Set global variables
-        let cur_inp = 0,
+        let isMobile = window.innerWidth < 500,
+            cur_inp = 0,
             cur_col = [],
             points = [],
 			      fLen = 0.001,
 			      cam_ang_h = 0,
 			      cam_ang_v = 0,
-			      cam_z = 1000,
+			      cam_z = isMobile ? 700 : 1000,
             cur_origin = [127, 127, 127],
             mx = -1,
 			      my = -1,
 			      cur_ang_h = 0,
 			      cur_ang_v = 0,
             zoomTo = -cam_z,
+            currentZoom = zoomTo,
             currentNear = -2,
             lockNear = false,
-            lineOpac = 0,
-            isMobile = window.innerWidth < 500;
+            lineOpac = 0;
 
         // Toggle input type
         inp_btns.forEach((b, i) => b.onclick = changeInput.bind(null, i));
@@ -770,14 +775,13 @@
 		    let ctx = can.getContext('2d');
             ctx.translate(window.innerWidth / 2, (window.innerHeight / 2) + 50);
 
-        // Cube movement
-        
+    // Cube movement
 		document.onmousemove = document.ontouchmove = function(e) {
       if (e.touches && e.touches.length > 1) {
         if (zoomTo < 0) {
           zoomTo *= -1;
         }
-        zoomTo = (my - e.touches[0].clientY) / 100;
+        zoomTo = currentZoom + ((my - e.touches[0].clientY) / 100);
         if (zoomTo < 200) {
           zoomTo = 200;
         }
@@ -791,7 +795,8 @@
 		}
 		can.onmousedown = can.ontouchstart = function(e) {
 			mx = e.clientX || e.touches[0].clientX;
-			my = e.clientY || e.touches[0].clientY;
+      my = e.clientY || e.touches[0].clientY;
+      currentZoom = zoomTo;
     }
     can.onwheel = function(e) {
         if (zoomTo < 0) {
