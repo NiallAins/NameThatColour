@@ -562,8 +562,10 @@
         }
 
         function resetColor() {
-            mobileResults.classList.remove('acitve');
-            can.transfrom(0, 100);
+            if (isMobile) {
+              resultsMobile.classList.remove('acitve');
+              ctx.translate(0, 100);
+            }
             let scale = canRad / 255;
             let scaledOrigin = cur_origin.map((o, i) => (127 - o) * scale);
             cur_origin = [127, 127, 127];
