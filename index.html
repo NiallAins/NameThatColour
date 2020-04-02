@@ -40,7 +40,7 @@
 
         #actionBtns {
             position: absolute;
-            top: 70px;
+            top: 75px;
             left: calc(50% + 84px);
             white-space: nowrap;
         }
@@ -121,16 +121,16 @@
             width: 100%;
             text-align: left;
             border: 1px solid lightgray;
-            margin-top: 12px;
+            margin-top: 8px;
             padding: 8px;
         }
         .inp-fld.hex {
-            padding-left: 18px;
+            padding-left: 20px;
         }
         .inp-fld.hex + span {
             position: absolute;
             left: 10px;
-            top: 21px;
+            top: 15px;
             color: gray;
             user-select: none;
         }
@@ -789,7 +789,7 @@
     }
 		document.onmousemove = document.ontouchmove = function(e) {
       if (initTouchDist !== -1) {
-        zoomTo = 1100 + (3 * Math.max(Math.min(getTouchDist(e) - initTouchDist, 300), -300));
+        zoomTo = 1100 + (-3 * Math.max(Math.min(getTouchDist(e) - initTouchDist, 300), -300));
       } else if (mx !== -1) {
 				cam_ang_h = cur_ang_h + (mx - (e.clientX || e.touches[0].clientX)) / canRad * 3.2;
 				cam_ang_v = cur_ang_v + (my - (e.clientY || e.touches[0].clientY)) / canRad * 3.2;
